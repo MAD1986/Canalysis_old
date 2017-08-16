@@ -1,5 +1,5 @@
 
-function [Imaging, Behavior]= lapselect_V3_RZ(C_df, Behavior, Imaging, XML); 
+function [Imaging, Behavior]= lapselect_V3_RZ(C_df, Behavior, XML, options); 
 
 %V3 RZ - uses frame timestamps from associated xml file for each session
 

@@ -2,23 +2,35 @@
 function [Events]=event_detect_new_V2(Events, Imaging);
 
 %% Import 
+Imaging.options.msbackadj
+
 
 if Imaging.options.msbackadj== true && options.restricted==true
 C_df=Imaging.trace_restricted_baselinesub;  
 elseif Imaging.options.msbackadj== true && options.restricted==false
-C_df=Imaging.trace_baselinesub;  
+C_df=Imaging.trace_restricted;  
 elseif Imaging.options.msbackadj== false && options.restricted==true
 C_df=Imaging.trace_restricted;  
 elseif Imaging.options.msbackadj== false && options.restricted==false
-C_df=Imaging.trace;  
-end
 
 
 
-SDON=options.SDON; %Threshold above x SD for ONSET 
-SDOFF=options.SDOFF; %Threshold below x SD for OFFSET 
-fr_im=30.3;
-mindurevent=options.mindurevent*fr_im;
+
+
+if (Events.options.baselinesub==1)&& (Events.options.restricted==1),
+C_df=Imaging.trace_restricted_baselinesub;  
+else if (Events.options.baselinesub==0) && (Events.options.restricted==1),
+C_df=Imaging.trace_restricted;
+else if (Events.options.baselinesub==1) && (Events.options.restricted==0),
+C_df=Imaging.trace_baselinesub;
+else if (Events.options.baselinesub==0 && Events.options.restricted==0),
+C_df=Imaging.trace;
+end;end;end;end
+
+SDON=Events.options.SDON; %Threshold above x SD for ONSET 
+SDOFF=Events.options.SDOFF; %Threshold below x SD for OFFSET 
+fr_im=Imaging.options.frimaging;
+mindurevent=Events.options.mindurevent*fr_im;
 
 
 %% First iteration
