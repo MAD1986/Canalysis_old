@@ -1,22 +1,21 @@
 
 
-function [Behavior] = behavior_multiple_texture(CSV,Behavior)
-%% Rotary decoder
-%1 position step = 0.155986  mm = 0.000
+function [Behavior] = behavior_lap(CSV,options)
 
-
-mincross=Behavior.options.mintimebeforelap; %time to wait before counting a new lap (s)
-acqfr=Behavior.options.acquisitionfrequency;
+%% Load parameters
+mindist=options.mindist; %distance min before counting a new lap (s)
+acqfr=options.acqHz; % behavior acquisition frequency (Hz)
+RFIDtext=options.textures;
 singleStim1CsvOut=CSV;
 
+%% Rotary decoder
+%1 position step = 0.155986  mm = 0.000
 %Isolate signals from time
 csvStimRaw = singleStim1CsvOut(:,2:end);
-
 %Digitize the files
 %try this with logical indexing%
 csvStimRaw(find((csvStimRaw > 1))) = 1; 
 csvStimRaw(find((csvStimRaw < 1))) = 0;
-
 %take out A and B signal from RE
 csvABdigitized = csvStimRaw(:,3:4);
 csvIndexDigitized = csvStimRaw(:,1);
@@ -24,50 +23,38 @@ lick=csvStimRaw(:,7);
 %Isolate time and convert to seconds
 timeOutput = singleStim1CsvOut(:,1);
 timeOutputSec = timeOutput./1000;
-
 %rotary decoder
 pastStateA = csvABdigitized(1,1);
 pastStateB = csvABdigitized(1,2);
-
 currentStateA = 0;
 currentStateB = 0;
-
 positionCount = 0;
 positionVector = zeros(size(csvABdigitized,1),1);
-
 %profile on
 for idx = 2:size(csvABdigitized,1)
     currentStateA = csvABdigitized(idx,1);
-    currentStateB = csvABdigitized(idx,2);
-    
+    currentStateB = csvABdigitized(idx,2);    
     if (currentStateA == pastStateA && currentStateB == pastStateB)
         positionVector(idx) =  positionCount;
     elseif (currentStateA ~= pastStateA || currentStateB ~= pastStateB)
         if (currentStateA == 0 && currentStateB == 0)
             if pastStateA == 0
-                positionCount = positionCount + 1;
-                
+                positionCount = positionCount + 1;             
             elseif pastStateA == 1
                 positionCount = positionCount - 1;
-            end
-         
-            positionVector(idx) =  positionCount;
-            
+            end        
+            positionVector(idx) =  positionCount;          
         elseif (currentStateA == 1 && currentStateB == 0)
             if pastStateA == 0
-                positionCount = positionCount + 1;
-                
+                positionCount = positionCount + 1;              
             elseif pastStateA == 1
                 positionCount = positionCount - 1;
-            end
-                      
-            positionVector(idx) =  positionCount;
-            
+            end                    
+            positionVector(idx) =  positionCount;           
         elseif (currentStateA == 1 && currentStateB == 1)
             if pastStateA == 0
-                positionCount = positionCount - 1;
-                
-            elseif pastStateA == 1
+                positionCount = positionCount - 1;              
+           elseif pastStateA == 1
                 positionCount = positionCount + 1;
             end
                 
@@ -88,63 +75,87 @@ for idx = 2:size(csvABdigitized,1)
     pastStateA = currentStateA;
     pastStateB = currentStateB;
 end
-%% Get the position to restart at each lap 
-lap=csvStimRaw(:,8);
-texture=singleStim1CsvOut(:,3);
+
 cum_position=positionVector*0.0155986;
-count=1:idx;
-
-tex{1}=[0.5 1]; %min to max threshold 
-tex{2}=[1 1.5]; 
-tex{3}=[1.5 2];
-tex{4}=[2 2.5];
-tex{5}=[2.5 5];
 
 
-[PKS,LOCS]= findpeaks(texture, 'MinPeakHeight',0.5,'MinPeakDistance',25000);
-for i=1:length(PKS);
-for ii=1:size(tex,2);
-if ((PKS(i)>=tex{ii}(1))) && ((PKS(i)<=tex{ii}(end)))
+
+%% Register postion of RFID for each texture
+
+if RFIDtext==1
+RFID=options.RFID;
+% textures RFID signal
+texture=singleStim1CsvOut(:,3);
+% cumulative position : 1 position step = 0.155986
+cum_position=positionVector*0.0155986;
+
+% Threshold RDIF signal when higher than first minimun threshold
+%not working: use findpeaks function
+%THR_RFID=find(texture>=RFID{1}(1));
+%POS_RFID=cum_position(THR_RFID);
+%PKS_RFID=texture(THR_RFID);
+%RFID_keep=[1;diff(POS_RFID)>=5]==1; % 5cm between RFID
+%POS_RFID_keep=POS_RFID(RFID_keep);
+%PKS_RFID_keep=PKS_RFID(RFID_keep);
+%THR_RFID_keep=PKS_RFID(RFID_keep);
+
+% Find peaks higher than first minimun threshold
+[PKS,LOCS]= findpeaks(texture, 'MinPeakHeight',RFID{1}(1));
+% Find position of each RFID and remove RFID is distance less than 5cm
+POS=cum_position(LOCS);
+keep_POS=[1;diff(POS)>=5]==1; % 5cm between RFID
+PKS_keep=PKS(keep_POS);
+LOCS_keep=LOCS(keep_POS);
+POS_keep=POS(keep_POS);
+
+% Associate peaks with texture
+for i=1:length(PKS_keep);
+for ii=1:size(RFID,2);
+if ((PKS_keep(i)>=RFID{ii}(1))) && ((PKS_keep(i)<=RFID{ii}(end)))
 findtex{ii}(i)=1;
-if 1:length(findtex{ii})<length(PKS);
-findtex{ii}=[findtex{ii} (zeros(length(PKS)-length(findtex{ii}),1))'];
+if 1:length(findtex{ii})<length(PKS_keep);
+findtex{ii}=[findtex{ii} (zeros(length(PKS_keep)-length(findtex{ii}),1))'];
 end
 end
 end
 end
-for i=1:length(PKS);
-for ii=1:size(tex,2);
+% Find indices and location of textures
+for i=1:length(PKS_keep);
+for ii=1:size(RFID,2);
 texind{ii}=find(findtex{ii}==1);
-texloc{ii}=LOCS(texind{ii});
+texloc{ii}=LOCS_keep(texind{ii});
 end
 end
-tex_binary=(zeros(size(texture,1),size(tex,2)));
-for ii=1:size(tex,2);
+% Make a binary (0 and 1 when RFID)
+tex_binary=(zeros(size(texture,1),size(RFID,2)));
+for ii=1:size(RFID,2);
 tex_binary(texloc{ii},ii)=1;
 end
+% Make structure
+Behavior.texture=tex_binary;
+end
 
-%lap=tex_binary(
+%% Get the position of lap RFID and restart position at each lap 
 
-    
-%for i=1:length(texture);
-%for ii=1:size(tex,2);
-%if ((texture(i)>=tex{ii}(1))) && ((texture(i)<=tex{ii}(end)))
-%findtex{ii}(i)=1;
-%if 1:length(findtex{ii})<length(texture);
-%findtex{ii}=[findtex{ii} (zeros(length(texture)-length(findtex{ii}),1))'];
-%end
-%end
-%end
-%end
-%findtex_mat=cell2mat(findtex);
-%tex_binary=reshape(findtex_mat,[],size(findtex,2));
+% lap RFID signals
+lap=csvStimRaw(:,8);
 
+% Threshold RDIF signal when egal or higher than 1
+lap_RFID=find(lap>=1);
 
-[periods, laptime] = Threshold([count' lap],'>=',1, 'max', mincross*acqfr );
-   lap_binary=diff(laptime)==1; 
-  lap_binary=[lap_binary; 0];
+% Find position of each lap RFID 
+RFID_POS=cum_position(lap_RFID);
+%and remove is distance less than min
+RFID_keep=[1;diff(RFID_POS)>=mindist]==1;
+RFID_POS_keep=RFID_POS(RFID_keep);
+lap_RFID_keep=lap_RFID(RFID_keep);
 
-lap_row=periods(:,1)';
+% Make binary
+lap_binary=(zeros(size(lap,1),1));
+lap_binary(lap_RFID_keep)=1;
+
+%Restart position at each RFID 
+lap_row=lap_RFID_keep;
 for i=1:length(lap_row)-1;
     for ii=1:length(lap_row)
 pos_cumul{i}=cum_position(lap_row(i):lap_row(i+1),1);
@@ -155,12 +166,15 @@ lap_stop(ii)=lap_row(ii);
 norm_pos{i} = (pos_reset{i} - min(pos_reset{i})) / ( max(pos_reset{i}) - min(pos_reset{i}) );
 end
 end
-
 time=timeOutputSec;
+% Position for the first incomplete lap
 lap1=cum_position(1:lap_row(1),1);
+% Position for the last incomplete lap
 lastlap=cum_position(lap_row(end):end)-cum_position(lap_row(end));
-lastlap_norm=(lastlap - min(lastlap)) / ( max(lastlap) - min(lastlap) );
-lap1_norm=(lap1 - min(lap1)) / ( max(lap1) - min(lap1) );
+% Normalize first and last lap
+lastlap_norm=(lastlap - min(pos_reset{end})) / ( max(pos_reset{end}) - min(pos_reset{end}) );
+lap1_norm=(lap1 - min(pos_reset{1})) / ( max(pos_reset{1}) - min(pos_reset{1}) );
+lap1_norm=lap1_norm+1-max(lap1_norm);
 pos_reset=[lap1 pos_reset lastlap];
 norm_pos=[lap1_norm norm_pos lastlap_norm];
 %to remove extra value added:
@@ -184,35 +198,35 @@ lick=csvStimRaw(:,7);
 time_position=[time position];
 
 
+%% Make structure
 Behavior.time=time;
 Behavior.position=position;
 Behavior.normalizedposition=position_norm;
 Behavior.cumulativeposition=cum_position;
 Behavior.lap=lap_start_stop;
 Behavior.lick=lick;
-Behavior.texture=texture;
+
+Behavior.options=options;
 
 
+
+%% Display figure
+if options.dispfig==1
 figure; plot(Behavior.time,Behavior.normalizedposition);
 hold on
 plot(Behavior.time,lap_binary, 'r');
-plot(Behavior.time,(Behavior.texture)/5, 'g');
+if RFIDtext==1
+for i=1:size(tex_binary,2)
+M=tex_binary(:,i);
+M(M >=1) = i;
+plot_tex(:,i)=M;
 end
-%%
-%Merge position for multiple sessions
+plot(Behavior.time,plot_tex/5, 'g');
+end
+end
 
-% cum_position_1min_tot=cum_position_1min+cum_position_pre(end,1);
-% cum_position=[cum_position_pre; cum_position_1min_tot];
-% 
-% time_1min_tot=time_position_1min(:,1)+time_position_pre(end,1);
-% time=[time_position_pre(:,1); time_1min_tot];
-% 
-% position=[time_position_pre(:,1); time_position_1min(:,1)];
-% 
-% time_position=[time position];
+end
 
-    
-    
     
         
  

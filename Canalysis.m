@@ -4,65 +4,90 @@
 % Bioinformatics Toolbox 
 
 %% Import data (XML, MAT, CSV)
-directory_name = '/Users/martial/Documents/Results/CA3_ThyGC6f/M1/FOV4' %folder with .mat .csv and .xml
+directory_name = '/Users/martial/Documents/test/M1' %folder with .mat .csv and .xml
 %!!!! files are listed by alphabetical order !!!!
 %!!!! Keep same name for mat and csv !!!!
-type='spikes';    %tye of calcium trace 'Cdf' ; 'expdff' or 'spikes' 
+type='expdff';    %tye of calcium trace 'Cdf' ; 'expdff' or 'spikes' 
 tic;
-[C_df,CSV]=combine_sessions(directory_name,type);
+[C_df,CSV,XML]=combine_sessions(directory_name,type);
 toc;
 %Sessions to analyse
 sessions=length(C_df); %ALL
 
 %% Compute behavior output
 
-Options.timebeflap=10; %time to wait before counting a new lap (s)
-Options.dstbeflap=10; %distance min before counting a new lap (s)
-Options.acqHz=10000; % behavior acquisition frequency (Hz)
+% Set parameters
+options.mindist=10; %min distance before counting a new lap (cm)
+options.acqHz=10000; % behavior acquisition frequency (Hz)
+options.textures=1; % 1= find RFID for each texture; 0 = no RFID for texture
+options.dispfig=1; % Display figure (lap, RFID)
 
+%IF find RFID for each texture
+%voltage [min max] signal for each RFID
+if options.textures==true
+RFID{1}=[0.5 1]; 
+RFID{2}=[2 2.5];
+RFID{3}=[3 3.5];
+RFID{4}=[1.5 2];
+RFID{5}=[1 1.5];
+options.RFID=RFID;
+end
+
+% Extract position / lap / textures
+%Behavior = behavior_lap(CSV,options);
+for i=1:sessions
+Behavior{i} = behavior_lap(CSV{i},options);
+end
+
+% Restrict calcium data to selected lap
+% Using frame timestamps from associated xml file
+options.startlap= 'first'; %First = 1st complete lap or numbers
+options.endlap='last'; %Last= last complete lap or numbers
+options.dispfig=1; % Display figure 
+if options.dispfig==true,
+options.c2plot=12; % neuron to display
+end
+%[Imaging, Behavior]= lapselect(C_df, Behavior, XML, options);
 
 for i=1:sessions
-tic;
-Behavior{i}.options.mintimebeforelap=10; %time to wait before counting a new lap (s)
-Behavior{i}.options.acquisitionfrequency=10000; %behavior acquisition frequency
-%[Behavior{i}] = behavior_multiple_texture(CSV{i},Behavior{i});
-%If no texture
-[Behavior{i}] = behavior_multiple_notexture(CSV{i},Behavior{i});
-
-%If no end lab RFID
-%[Behavior{i}] = findtextures(CSV{i},Behavior{i})
-%end
-%for i=1:sessions
-%[Behavior{i}] = behavior_multiple_changelap_test(CSV{i},Behavior{i})
+[Imaging{i}, Behavior{i}]= lapselect(C_df{i}, Behavior{i}, XML{i}, options);
 end
-for i=1:sessions
-%    tic
-%Restrict calcium imaging data:
-Behavior{i}.restricted.startlap= 1; %First lap 
-Behavior{i}.restricted.endlap=length(Behavior{i}.lap); %Last lap
-Imaging{i}.options.frimaging=30.2061910850898;%imaging framerate (Hz)
-Imaging{i}.options.celltoplot=25; %exemple cell to plot
-%If no textures RFID
-[Imaging{i}, Behavior{i}]= lapselect_V2(C_df{i}, Behavior{i}, Imaging{i});
-%If textures
-%[Imaging{i}, Behavior{i}]= lapselect_V2_texture(C_df{i}, Behavior{i}, Imaging{i});
-toc;
-end
-clear CSV;
+clear CSV XML options;
 
 %% Correct drifting baseline
-for i=1:sessions
-Imaging{i}.options.baselinesub.windwith=250; %width for the shifting window (in frame).
-[Imaging{i}]=baselinesub(Imaging{i});
+%Info 
+%https://www.mathworks.com/help/bioinfo/ref/msbackadj.html
+options.msbackadj=1; % 1 or 0 
+
+% Set parameters
+options.windwith=250; %width for the shifting window (in frame)
+options.dispfig=1; % Display figure 
+if options.dispfig==true,
+options.c2plot=12; % neuron to display
 end
-%If no baselinesub:
-%for i=1:sessions
-%Imaging{i}.trace_baselinesub  = Imaging{i}.trace  ;
-%Imaging{i}.trace_restricted_baselinesub    = Imaging{i}.trace_restricted  ;
-%end
+
+% Correct baseline of signal with peaks
+for i=1:sessions
+if options.msbackadj==true
+[Imaging{i}]=baselinesub(Imaging{i}, options);
+elseif options.msbackadj==false
+Imaging{i}.options.msbackadj=0;
+end
+end
+
+clear options;
 
 
 %% Events detection
+
+% Set parameters
+options.restricted=1; %Event detection on restricted trace
+options.SDON=4; %Threshold above x SD for ONSET 
+options.SDOFF=0.5; %Threshold below x SD for OFFSET 
+options.mindurevent=1; %Min duration of event to be considered  %Danielson et al. used > 1s
+
+
+
 for i=1:sessions
 Events{i}.options.restricted=1; %Event detection on restricted trace
 Events{i}.options.baselinesub=1; %Event detection on baseline substracetd trace
@@ -180,7 +205,7 @@ end
 %% Save
 %Where to save:
 tic;
-save(strcat(directory_name,'/Analysis/','ALL_analysed'), '-v7.3');
+save('test', '-v7.3');
 toc;
 
 
