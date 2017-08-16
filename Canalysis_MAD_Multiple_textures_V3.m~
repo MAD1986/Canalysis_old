@@ -11,8 +11,7 @@ type='spikes';    %tye of calcium trace 'Cdf' ; 'expdff' or 'spikes'
 tic;
 [C_df,CSV]=combine_sessions(directory_name,type);
 toc;
-%Sessions to analyse
-sessions=length(C_df); %ALL
+%sessions=2;
 
 %% Compute behavior output
 for i=1:sessions
