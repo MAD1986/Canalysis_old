@@ -3,8 +3,8 @@
 % !toolboxes needed!  
 % Bioinformatics Toolbox 
 
-%% Import data
-directory_name = uigetdir %folder with .mat and csv
+%% Import data (XML, MAT, CSV)
+directory_name = '/Users/martial/Documents/Results/CA3_ThyGC6f/M1/FOV4' %folder with .mat .csv and .xml
 %!!!! files are listed by alphabetical order !!!!
 %!!!! Keep same name for mat and csv !!!!
 type='spikes';    %tye of calcium trace 'Cdf' ; 'expdff' or 'spikes' 
@@ -15,6 +15,12 @@ toc;
 sessions=length(C_df); %ALL
 
 %% Compute behavior output
+
+Options.timebeflap=10; %time to wait before counting a new lap (s)
+Options.dstbeflap=10; %distance min before counting a new lap (s)
+Options.acqHz=10000; % behavior acquisition frequency (Hz)
+
+
 for i=1:sessions
 tic;
 Behavior{i}.options.mintimebeforelap=10; %time to wait before counting a new lap (s)

@@ -16,24 +16,28 @@ sessions=length(C_df); %ALL
 
 %% Compute behavior output
 
+% Set parameters
 Options.timebeflap=10; %time to wait before counting a new lap (s)
-Options.dstbeflap=10; 
-
+Options.dstbeflap=10; %distance min before counting a new lap (s)
+Options.acqHz=10000; % behavior acquisition frequency (Hz)
+Options.textures=1; % 1= find RFID for each texture; 0 = no RFID for texture
+%If RFID for each texture: value of voltage corresponding for each texture
+%min to max value
+RFID{1}=[0.5 1]; 
+RFID{2}=[2 2.5];
+RFID{3}=[3 3.5];
+RFID{4}=[1.5 2];
+RFID{5}=[1 1.5];
+Options.RFID=RFID;
 
 
 for i=1:sessions
 tic;
-Behavior{i}.options.mintimebeforelap=10; %time to wait before counting a new lap (s)
-Behavior{i}.options.acquisitionfrequency=10000; %behavior acquisition frequency
-%[Behavior{i}] = behavior_multiple_texture(CSV{i},Behavior{i});
-%If no texture
-[Behavior{i}] = behavior_multiple_notexture(CSV{i},Behavior{i});
 
-%If no end lab RFID
-%[Behavior{i}] = findtextures(CSV{i},Behavior{i})
-%end
-%for i=1:sessions
-%[Behavior{i}] = behavior_multiple_changelap_test(CSV{i},Behavior{i})
+[Behavior{i}] = behavior_lap(CSV{i},Options);
+
+
+
 end
 for i=1:sessions
 %    tic

@@ -8,14 +8,12 @@ listxml = dir('*.xml');
 %!!!! files are listed by alphabetical order !!!!
 %!!!! Keep same name for mat and csv !!!!
 for i = 1:length(listmat)
-csvfile{i}=listcsv(i).name;
-disp('Reading csv');
-CSV{i} = csvread(csvfile{i},1,0);
-disp('Reading xml');
-XML{i} = xml2structV2([listxml(i).folder,'\',listxml(i).name]);
+%csvfile{i}=listcsv(i).name;
+disp(['Reading CSV ' ,num2str(i),'/', num2str(length(listmat))]);
+%CSV{i} = csvread(csvfile{i},1,0);
+disp(['Reading XML ' ,num2str(i),'/', num2str(length(listmat))]);
+%XML{i} = xml2structV2((fullfile(listxml(i).folder,listxml(i).name)));
 end
-
-
 switch type
     case 'expdff'
 for i = 1:length(listmat)
@@ -31,7 +29,7 @@ session_imaging{i} = load((listmat(i).name));
 C_df{i}=session_imaging{i}.expDffMedZeroed;
 C_df{i}=(full(C_df{i})');
 end
-  case 'spikes'
+    case 'spikes'
 for i = 1:length(listmat)
 matfile=listmat(i).name;
 session_imaging{i} = load((listmat(i).name));
@@ -39,5 +37,4 @@ C_df{i}=session_imaging{i}.S;
 C_df{i}=(full(C_df{i})');
 end
 end
-
 end
