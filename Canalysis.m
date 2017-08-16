@@ -85,18 +85,16 @@ options.restricted=1; %Event detection on restricted trace
 options.SDON=4; %Threshold above x SD for ONSET 
 options.SDOFF=0.5; %Threshold below x SD for OFFSET 
 options.mindurevent=1; %Min duration of event to be considered  %Danielson et al. used > 1s
+options.iterations=3 %Nb of iterations %Danielson et al. used 3 iterations
+options.dispfig=1; % Display figure 
+if options.dispfig==true,
+options.c2plot=4; % neuron to display
+end
 
-
-
+% Detect events
+%[Events]=detect_events(Imaging,options);
 for i=1:sessions
-Events{i}.options.restricted=1; %Event detection on restricted trace
-Events{i}.options.baselinesub=1; %Event detection on baseline substracetd trace
-Events{i}.options.SDON=4; %Threshold above x SD for ONSET 
-Events{i}.options.SDOFF=0.5; %Threshold below x SD for OFFSET 
-Events{i}.options.mindurevent=1; %Min duration of event to be considered  %Danielson et al. used > 1s
-tic;
-[Events{i}]=event_detect_new_V2(Events{i}, Imaging{i});
-toc;
+[Events{i}]=detect_events(Imaging{i},options);
 end
 
 %% Run onset
@@ -205,7 +203,7 @@ end
 %% Save
 %Where to save:
 tic;
-save('test', '-v7.3');
+save('test_ca', '-v7.3');
 toc;
 
 
