@@ -1,5 +1,5 @@
 
-function [Events, Behavior]=runevents_V6(Events,Behavior,Imaging);
+function [Events, Behavior]=run_epoch(Events,Behavior,Imaging);
 
 %% Import
 
@@ -60,13 +60,40 @@ speed=[0;diff(res_cum_postion)]*avg_fr;
 
 %% Find running epochs
 
-%Find peaks with min speed
-peakspeed_idx=find(speed>=run_thr);
-
 %Find periods of forward motion (speed >0)
 run_idx=find(speed>0);
 run_time=Cdf_time(run_idx);
 dist_epochs=diff(run_time);
+
+%Find epochs separated by more than the merging threshold
+epochs_end_idx=find(dist_epochs>=mergdur);
+epochs_start_idx=[run_idx(1);epochs_end_idx+1];
+epochs_end_idx=[epochs_end_idx ;run_idx(end)];
+run_epochs_idx=[epochs_start_idx epochs_end_idx];
+run_epochs_time=Cdf_time(run_epochs_idx);
+%Minimum duration for running epoch
+run_epochs_dur=run_epochs_time(:,2)-epochs_start_time(:,1);
+if run_epochs_dur(i)<mindur ==1
+   run_epochs_time(i,:)=NaN;
+   run_epochs_idx(i,:)=NaN;
+end  
+run_epochs_time=run_epochs_time(~isnan(run_epochs_time(:,2)),:);
+run_epochs_idx=run_epochs_idx(~isnan(run_epochs_idx(:,2)),:);
+
+%Find peaks with min speed
+%peakspeed_idx=find(speed>=run_thr);
+
+%Find if peaks speed value in running epochs
+for i=1:size(run_epochs_idx,1)
+speed_run_epochs{i}=speed(run_epochs_idx(i,1):run_epochs_idx(i,2));
+
+end
+end
+for i=1:size(run_epochs_idx,1)
+if speed_run_epochs{i}>run_thr;
+test(i)=1
+end
+end
 
 
 %determine intervals for running behavior  

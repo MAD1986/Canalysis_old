@@ -98,6 +98,12 @@ for i=1:sessions
 end
 
 %% Run onset
+options.minspeed=5;  % minimum peak speed (cm/s)
+options.mindur=1; %Minimum duration (s) for running epoch
+options.merge=1; %Merge consecutive running epochs separated by less than (s)
+
+
+
 for i=1:sessions
 Events{i}.options.run.speed_thr=5; % minimum peak speed (cm/s)
 Events{i}.options.norun.speed_thr=1; %Threshold for non running speed (cm/s)
