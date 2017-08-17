@@ -4,7 +4,7 @@
 % Bioinformatics Toolbox 
 
 %% Import data (XML, MAT, CSV)
-directory_name = '/Users/martial/Documents/Results/CA3_ThyGC6f/M1/FOV4' %folder with .mat .csv and .xml
+directory_name = '/Users/martial/Documents/test/M1' %folder with .mat .csv and .xml
 %!!!! files are listed by alphabetical order !!!!
 %!!!! Keep same name for mat and csv !!!!
 type='expdff';    %tye of calcium trace 'Cdf' ; 'expdff' or 'spikes' 
@@ -57,7 +57,7 @@ clear CSV XML options;
 %% Correct drifting baseline
 %Info 
 %https://www.mathworks.com/help/bioinfo/ref/msbackadj.html
-options.msbackadj=0; % 1 or 0 
+options.msbackadj=1; % 1 or 0 
 
 % Set parameters
 options.windwith=250; %width for the shifting window (in frame)
@@ -85,7 +85,7 @@ options.restricted=1; %Event detection on restricted trace
 options.SDON=4; %Threshold above x SD for ONSET 
 options.SDOFF=0.5; %Threshold below x SD for OFFSET 
 options.mindurevent=1; %Min duration of event to be considered  %Danielson et al. used > 1s
-options.iterations=3; %Nb of iterations %Danielson et al. used 3 iterations
+options.iterations=3 %Nb of iterations %Danielson et al. used 3 iterations
 options.dispfig=1; % Display figure 
 if options.dispfig==true,
 options.c2plot=4; % neuron to display
@@ -99,23 +99,27 @@ end
 
 %% Running epochs
 
-options.method='speed'; %'peak' or 'speed'
+options='peak'; %'peak' or 'speed'
 % threshold running epochs based on :
 % min peak speed(Danielson et al. 2016a, b, 2016) 
-% OR average speed (Cossart) 
+%or on average speed (Cossart) 
 
-options.minspeed=2; %minimum speed (cm/s)  -- only if 'speed'
-options.minpeak=5;  % minimum peak speed (cm/s) -- only if 'peak'
+options.minspeed=2; %minimum speed (cm/s)
+options.minpeak=5;  % minimum peak speed (cm/s)
 options.mindur=1; %Minimum duration (s) for running epoch
 options.merge=0.5; %Merge consecutive running epochs separated by less than (s)
 
-options.dispfig=1; % Display figure 
-if options.dispfig==true,
-options.c2plot=4; % neuron to display
-end
+
 
 for i=1:sessions
-[Events{i}, Behavior{i}]=run_epoch(Events{i},Behavior{i},Imaging{i}, options);
+Events{i}.options.run.speed_thr=5; % minimum peak speed (cm/s)
+Events{i}.options.norun.speed_thr=1; %Threshold for non running speed (cm/s)
+Events{i}.options.run.min_dur=1;  %Minimum duration (s) for running epoch
+Events{i}.options.norun.min_dur=1;  %Minimum duration (s) for non running epoch
+Events{i}.options.run.merge_dur=0.5; %Merge consecutive running epochs separated by less than (s)
+Events{i}.options.norun.merge_dur=0.25; %Merge consecutive non running epochs separated by less than (s)
+Events{i}.options.span=3; %Speed smoothing kernel
+[Events{i}, Behavior{i}]=runevents_V6(Events{i},Behavior{i},Imaging{i});
 end
 %% Events analysis
 for i=1:sessions

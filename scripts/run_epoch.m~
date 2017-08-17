@@ -199,7 +199,7 @@ Events.Run.run_onset_binary=run_onset_binary;
 Events.No_Run.norun_onset_offset=norun_onset_offset;
 Events.No_Run.norun_onset_binary=norun_onset_binary;
 
-Events.option.runepochs=options;
+Events.option
 
 if options.dispfig==true,
 c2plot=options.c2plot;    
