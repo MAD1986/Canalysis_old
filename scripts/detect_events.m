@@ -104,6 +104,7 @@ Events.onset_binary=onset_binary;
 Events.onset_ones=onset_offset_ones;
 Events.onset_offset_time=event_time;
 Events.options=options;
+Events.STD_noise=std_Cdf_off;
 
 %% Figure.
 if options.dispfig==1

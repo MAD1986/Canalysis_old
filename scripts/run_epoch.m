@@ -37,6 +37,7 @@ position=Behavior.position;
 end
 %Events
 onset_offset=Events.onset_offset;
+onset_ones=Events.onset_ones;
 onset_binary=Events.onset_binary;
 time_position=[time position];
 
@@ -171,17 +172,25 @@ run_onset_offset{i}=onset_offset{i}(keep==1,:);
 norun_onset_offset{i}=onset_offset{i}(keep==0,:);
 end
 
-%get the binary
+%Make binary
 run_onset_binary=zeros(size(onset_binary,1), size(onset_binary,2));
-norun_onset_binary=zeros(size(onset_binary,1), size(onset_binary,2));
+norun_onset_binary=run_onset_binary;
 for i=1:size(onset_offset,2)
 run_onset_binary(run_onset_offset{i}(:,1),i)=1;
 norun_onset_binary(norun_onset_offset{i}(:,1),i)=1;
 end
 
-
-
-
+%Make ones
+run_onset_ones=zeros(size(onset_ones,1), size(onset_ones,2));
+norun_onset_ones=run_onset_ones;
+for i=1:size(onset_offset,2)
+for irun=1:size(run_onset_offset{i},1)
+run_onset_ones(run_onset_offset{i}(irun,1):run_onset_offset{i}(irun,2),i)=1;
+end
+for inorun=1:size(norun_onset_offset{i},1)
+norun_onset_ones(norun_onset_offset{i}(inorun,1):norun_onset_offset{i}(inorun,2),i)=1;
+end
+end
 %% Make structure
 
 Behavior.run_time=runtime;
@@ -196,8 +205,11 @@ Behavior.resampled.position=res_position;
 
 Events.Run.run_onset_offset=run_onset_offset;
 Events.Run.run_onset_binary=run_onset_binary;
+Events.Run.run_onset_ones=run_onset_ones;
+
 Events.No_Run.norun_onset_offset=norun_onset_offset;
 Events.No_Run.norun_onset_binary=norun_onset_binary;
+Events.No_Run.norun_onset_ones=norun_onset_ones;
 
 Events.option.runepochs=options;
 

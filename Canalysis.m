@@ -57,7 +57,7 @@ clear CSV XML options;
 %% Correct drifting baseline
 %Info 
 %https://www.mathworks.com/help/bioinfo/ref/msbackadj.html
-options.msbackadj=0; % 1 or 0 
+options.msbackadj=1; % 1 or 0 
 
 % Set parameters
 options.windwith=250; %width for the shifting window (in frame)
@@ -82,10 +82,14 @@ clear options;
 
 % Set parameters
 options.restricted=1; %Event detection on restricted trace
-options.SDON=4; %Threshold above x SD for ONSET 
+
+options.SDON=3; %Threshold above x SD for ONSET 
 options.SDOFF=0.5; %Threshold below x SD for OFFSET 
+
 options.mindurevent=1; %Min duration of event to be considered  %Danielson et al. used > 1s
+
 options.iterations=3; %Nb of iterations %Danielson et al. used 3 iterations
+
 options.dispfig=1; % Display figure 
 if options.dispfig==true,
 options.c2plot=4; % neuron to display
@@ -118,13 +122,29 @@ for i=1:sessions
 [Events{i}, Behavior{i}]=run_epoch(Events{i},Behavior{i},Imaging{i}, options);
 end
 %% Events analysis
+
+options.exclude=1; % exclude events when no peaks found 
+options.mindist= 20; % Set minimun distance between peaks (frame)
+options.STD_pro=3; % Set minimun prominence of peak ( X * STD noise)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 for i=1:sessions
-Events{i}.options.analysis.maxrisetime=50; %Maximun rise time (frame) 
-Events{i}.options.analysis.maxduration=250; %Maximun duration (frame) 
-Events{i}.options.analysis.maxpeak=1000; %in % change of dF/F
 %Analysis on all events / Runnning events / Non-runnning events
 onset_offset_all{i}=[Events{i}.onset_offset; Events{i}.RunningEpochs.run_onset_offset; Events{i}.NonRunningEpochs.norun_onset_offset];
-if Events{i}.options.restricted==1,Cdf_time{i}=Imaging{i}.time_restricted;elseif Events{i}.options.restricted==0,Cdf_time{i}=Imaging{i}.time;
+if Events{i}.options.restricted==1,Cdf_time{i}=Imaging{i}.time_restricted;
+elseif Events{i}.options.restricted==0,Cdf_time{i}=Imaging{i}.time;
 end
 end
 for i=1:sessions

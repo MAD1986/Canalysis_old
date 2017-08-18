@@ -357,7 +357,7 @@ for i=1:size(onset_offset,2)
 onset_size{i}=onset_offset{i}(:,2)-onset_offset{i}(:,1);
 end
 
-idx=cell2mat(arrayfun(@(x) randperm((size(onset_binary,1)),size(onset_binary,1)),(1:100)','un',0));
+idx=cell2mat(arrayfun(@(x) randperm((size(onset_ones,1)),size(onset_ones,1)),(1:100)','un',0));
 
 for S=1:100
     for u=1:size(onset_binary,2)

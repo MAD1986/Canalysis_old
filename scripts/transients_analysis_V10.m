@@ -1,33 +1,42 @@
 
-%% Analysis
-
 function [EventsProperties, NetworkProperties, PCAProperties]=transients_analysis_V10(onset_offset,time,binary, Events, Imaging);
 
-%Need C_df; onset_offset (OR run_onset_offset; norun_onset_offset)
+%% Import data
 
-frimage=Imaging.options.frimaging;
-maxrisetime=Events.options.analysis.maxrisetime;
-maxduration=Events.options.analysis.maxduration;
-maxpeak=Events.options.analysis.maxpeak; 
-events_binary=Events.onset_ones;
+maxrisetime=options.maxrisetime;
+maxduration=options.maxduration;
+maxpeak=options.maxpeak;
 
-
-if (Events.options.baselinesub==1)&& (Events.options.restricted==1),
+%Calcium trace
+if Imaging.options.msbackadj== true && options.restricted==true
 C_df=Imaging.trace_restricted_baselinesub;  
-Cdf_time=Imaging.time_restricted;
-else if (Events.options.baselinesub==0) && (Events.options.restricted==1),
-C_df=Imaging.trace_restricted;
-Cdf_time=Imaging.time_restricted;
-else if (Events.options.baselinesub==1) && (Events.options.restricted==0),
+elseif Imaging.options.msbackadj== true && options.restricted==false
 C_df=Imaging.trace_baselinesub;
+elseif Imaging.options.msbackadj== false && options.restricted==true
+C_df=Imaging.trace_restricted;
+elseif Imaging.options.msbackadj== false && options.restricted==false
+C_df=Imaging.trace; 
+end
+
+%Time 
+if options.restricted==true
+Cdf_time=Imaging.time_restricted;
+elseif options.restricted==false
 Cdf_time=Imaging.time;
-else if (Events.options.baselinesub==0 && Events.options.restricted==0),
-C_df=Imaging.trace;
-Cdf_time=Imaging.time;
-end;end;end;end
+end
+
+time{1}=Behavior.resampled.time;
+time{2}=Behavior.run_time;
+time{3}=Behavior.no_run_time;
+
+%Events
+onset_offset=[Events.onset_offset; Events.Run.run_onset_offset; Events.No_Run.norun_onset_offset];
+onset_binary=[Events.onset_binary; Events.Run.run_onset_binary; Events.No_Run.norun_onset_binary];
+
 
 
 %% Measure Ca2+ events properties 
+
 %eventdur=  duration from onset to offset
 %eventpeak= peak dF/F value 
 %eventampl=  amplitude from threshold (2SD) to peak 
@@ -38,6 +47,11 @@ end;end;end;end
 %decaytime= slope of exponential fiting of the decay
 %rsa= regression fit
 %halfwidth= width at half amplitude
+
+
+
+
+
 for u=1:size(onset_offset,2); for uu=1:size(onset_offset{u},1);    
 eventdf{u}{uu}=C_df((onset_offset{u}(uu,1)):(onset_offset{u}(uu,2)),u);
 eventdur{u}(uu)=length(eventdf{u}{uu});
@@ -387,3 +401,4 @@ C_df_bin_sub=C_df_sub(find(binary==1),:);
 
 
 end
+
