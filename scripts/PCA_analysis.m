@@ -1,5 +1,7 @@
 
 
+function [PCA_Properties]= PCA_analysis(Event_Properties,Network_Properties);
+
 %% PCA on event properties
 
 %Import data
@@ -33,7 +35,7 @@ covarianceMatrix_e = cov(allproperties_mat);
 dataInPrincipalComponentSpace_e = allproperties_mat*coeff_e;
 %Plot first 2 PCs
 vbls = {'dur','peak','ampl','meandf','AUC','width'};
-figure; biplot(coeff_e(:,1:2),'scores',score_e(:,1:2),'varlabels',vbls);
+%figure; biplot(coeff_e(:,1:2),'scores',score_e(:,1:2),'varlabels',vbls);
 
 PCA_Properties.Event.dataPCS=dataInPrincipalComponentSpace_e;
 PCA_Properties.Event.score=score_e;
@@ -76,7 +78,7 @@ covarianceMatrix_c = cov(allproperties_cells);
 dataInPrincipalComponentSpace_c = allproperties_cells*coeff_c;
 %Plot first 2 PCs
 vbls = {'dur','peak','ampl','meandf','AUC','width','freq','AUC rate','corr_pairs'};
-figure; biplot(coeff_c(:,1:2),'scores',score_c(:,1:2),'varlabels',vbls);
+%figure; biplot(coeff_c(:,1:2),'scores',score_c(:,1:2),'varlabels',vbls);
 
 
 PCA_Properties.Cell.dataPCS=dataInPrincipalComponentSpace_c;
@@ -87,3 +89,4 @@ PCA_Properties.Cell.explained=explained_c;
 PCA_Properties.Cell.covarianceMatrix=covarianceMatrix_c;
 PCA_Properties.Cell.varlabels=vbls;
 PCA_Properties.Cell.allvariables=allproperties_cells;
+end

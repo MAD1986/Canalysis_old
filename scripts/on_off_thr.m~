@@ -5,16 +5,11 @@ function [on_off_ones, on_off_binary, on_off] = on_off_thr(on, off, C_df);
 onset=diff(on)==1;
 offset=diff(off)==1;
 
-%If no onset at all, stop function and return blank ones, binary and on_off
 test_onset=sum(sum(onset));
-
-
 
 for i=1:size(onset,2)
 onset_idx{i}=find(onset(:,i)==1);
 end
-
-if test_onset>=1;
 %Trace from onset to next end 
 %Find idx of offset in trace
 for i=1:size(onset_idx,2)
@@ -55,15 +50,6 @@ on_off_binary(:,i)=diff(on_off_ones(:,i))==1;
          
 end
 end
-end
-end
-
-if test_onset==0,
- on_off_ones=zeros(size(C_df,1), size(C_df,2));
- on_off_binary=on_off_ones;
- on_off=onset_idx;
-end
-
 end
 
 

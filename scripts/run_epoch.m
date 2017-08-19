@@ -193,8 +193,8 @@ end
 end
 %% Make structure
 
-Behavior.run_time=runtime;
-Behavior.no_run_time=noruntime;
+Behavior.resampled.run_time=runtime;
+Behavior.resampled.no_run_time=noruntime;
 %Behavior.runbinary=run;
 %Behavior.norunbinary=norun;
 Behavior.speed=speed;

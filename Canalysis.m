@@ -85,10 +85,12 @@ options.restricted=1; %Event detection on restricted trace
 
 options.SDON=3; %Threshold above x SD for ONSET 
 options.SDOFF=0.5; %Threshold below x SD for OFFSET 
+options.iterations=3; %Nb of iterations %Danielson et al. used 3 iterations
+% first pick sigma function
+
 
 options.mindurevent=1; %Min duration of event to be considered  %Danielson et al. used > 1s
 
-options.iterations=3; %Nb of iterations %Danielson et al. used 3 iterations
 
 options.dispfig=1; % Display figure 
 if options.dispfig==true,
@@ -135,7 +137,7 @@ options.minframes=3; %consecutive frames with activity above the significance th
  
 
 for i=1:sessions
-[Events_Properties{i}, Network_Properties{i}]=event_analysis(Behavior{i}, Events{i}, Imaging{i}, options);
+[Events{i}, Network{i}]=event_analysis(Behavior{i}, Events{i}, Imaging{i}, options);
 end 
 
 %% Identification of spatially-tuned cells
