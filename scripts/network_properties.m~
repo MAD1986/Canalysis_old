@@ -101,9 +101,9 @@ end
 end
 S_activity_hist(S,:)=(sum(Temp_onset_ones,2)/size(Temp_onset_ones,2))*100;
 end
-
+toc;
 disp('End shuffle')
- toc; 
+  
 
 %p-value was defined as the fraction of shuffle distribution that 
 %exceeded the frame true number of co-active cells
@@ -148,7 +148,7 @@ nb_syn_epochs=size(syn_epochs,1);
 
 %Number of co-active neurons in significant frames
 nb_CC_sig_fr=activity_hist(sign_frames_idx);
-co_act_fr=[sign_frames' nb_CC_sig_fr];
+co_act_fr=[ nb_CC_sig_fr'
 
 %% Make structure
 Network_Properties.frequency=event_freq;
@@ -158,13 +158,14 @@ Network_Properties.corr_pairs=corr_pairs;
 Network_Properties.nb_corr_pairs=nb_corr_pairs;
 Network_Properties.HC_neurons=HC_neurons;
 Network_Properties.activity_hist=activity_hist;
-Network_Properties.sign_activity_frames=sign_frames;
-Network_Properties.nb_cells_sign_activity_frames =co_act_fr;
-Network_Properties.synchronous_epochs=syn_epochs;
-Network_Properties.nb_synchronous_epochs=nb_syn_epochs;
- 
- 
+Network_Properties.
 
+ 
+ 
+ sign_frames
+ 
+ syn_epochs
+ nb_syn_epochs
 end
 
 

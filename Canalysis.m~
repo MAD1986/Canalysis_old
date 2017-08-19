@@ -123,20 +123,69 @@ for i=1:sessions
 end
 %% Events analysis
 
- % Events parameters
 options.exclude=1; % exclude events when no peaks found 
 options.mindist= 20; % Set minimun distance between peaks (frame)
 options.STD_pro=3; % Set minimun prominence of peak ( X * STD noise)
-
- % Network parameters
 options.Nshuffle=1000; % Nb of shuffle for synchronous activity 
 options.pmin=0.05; % min p value to be considered as significant
-options.minframes=3; %consecutive frames with activity above the significance threshold
+
+
+ % At least 3 consecutive frames with activity above 
+% the significance threshold were required to be considered a synchronous event
+options.minframes=3; % 
  
+% function event_analysis
+
+
+
+
+
+
+
+
+
+
+
 
 for i=1:sessions
-[Events_Properties{i}, Network_Properties{i}]=event_analysis(Behavior{i}, Events{i}, Imaging{i}, options);
-end 
+%Analysis on all events / Runnning events / Non-runnning events
+onset_offset_all{i}=[Events{i}.onset_offset; Events{i}.RunningEpochs.run_onset_offset; Events{i}.NonRunningEpochs.norun_onset_offset];
+if Events{i}.options.restricted==1,Cdf_time{i}=Imaging{i}.time_restricted;
+elseif Events{i}.options.restricted==0,Cdf_time{i}=Imaging{i}.time;
+end
+end
+for i=1:sessions
+time_all{i}=length(Cdf_time{i});
+time_run{i}=sum(Behavior{i}.runbinary);
+run_binary{i}=Behavior{i}.runbinary;
+time_norun{i}=sum(Behavior{i}.norunbinary);
+norun_binary{i}=Behavior{i}.norunbinary;
+time{i}=[time_all{i} time_run{i} time_norun{i}];
+binary{i}=[ones((length(Cdf_time{i})),1) run_binary{i} norun_binary{i}];
+end
+for i=1:sessions
+    tic;
+for c=1:3 %all, run, norun
+[EventsProperties{i}{c}, NetworkProperties{i}{c}, PCAProperties{i}{c}]=transients_analysis_V9(onset_offset_all{i}(c,:), time{i}(c), binary{i}(:,c), Events{i}, Imaging{i});
+end
+toc;
+end
+
+for i=1:sessions
+for c=1:3 %all, run, norun
+Events{i}.Properties=EventsProperties{i}{1};
+Events{i}.RunningEpochs.Properties=EventsProperties{i}{2};
+Events{i}.NonRunningEpochs.Properties=EventsProperties{i}{3};
+Network{i}=NetworkProperties{i}{1};
+Network{i}.RunningEpochs=NetworkProperties{i}{2};
+Network{i}.NonRunningEpochs=NetworkProperties{i}{3};
+PCA{i}=PCAProperties{i}{1};
+PCA{i}.RunningEpochs=PCAProperties{i}{2};
+PCA{i}.NonRunningEpochs=PCAProperties{i}{3};
+end
+end
+clear EventsProperties NetworkProperties PCAProperties c onset_offset_all Cdf_time time time_all time_run time_norun run_binary norun_binary binary;
+
 
 %% Identification of spatially-tuned cells
 for j=1:sessions
