@@ -2,16 +2,11 @@
 function [Events, Behavior]=run_epoch(Events,Behavior,Imaging, options);
 
 %% Import
-
-
-
-
-
 %Options
 options.restricted=Events.options.restricted;
 mindur=options.mindur;
 mergdur=options.merge;
-
+mov_wind=options.moving_window;
 
 %Calcium trace
 if Imaging.options.msbackadj== true && options.restricted==true
@@ -52,7 +47,7 @@ res_cum_postion=cum_postion(bin);
 res_position=position(bin);
 else
 res_time_position=time_position(bin,:);
-res_cum_postion=cum_postion(bin);
+res_cum_position=cum_postion(bin);
 res_position=position(bin);
 end
 res_time=res_time_position(:,1);
@@ -61,8 +56,14 @@ res_time=res_time_position(:,1);
 %res_cum_pos_sm=smooth(res_cum_postion,3);
 % Mean measured framerate of imaging (Hz)
 avg_fr=1/(mean(diff(Cdf_time)));
+
 %Speed 
-speed=[0;diff(res_cum_postion)]*avg_fr;
+speed=[0;diff(res_cum_position)]*avg_fr;
+%average using moving mean
+
+speed=movmean(speed,[mov_wind]);
+
+
 
 %% Find running epochs
 
@@ -117,7 +118,7 @@ dist_epochs=diff(run_time);
 %Find epochs separated by more than the merging threshold
 epochs_end_idx=find(dist_epochs>=mergdur);
 epochs_start_idx=[run_idx(1);epochs_end_idx+1];
-epochs_end_idx=[epochs_end_idx ;length(run_time)];
+epochs_end_idx=[epochs_end_idx ;length(run_idx)];
 run_epochs_idx=[epochs_start_idx epochs_end_idx];
 run_epochs_time=run_time(run_epochs_idx);
 %Minimum duration for running epoch
@@ -130,9 +131,6 @@ end
 end
 run_epochs_time=run_epochs_time(~isnan(run_epochs_time(:,2)),:);
 run_epochs_idx=run_epochs_idx(~isnan(run_epochs_idx(:,2)),:);
-    
-    
-    
     otherwise
         disp('options.method should be peak or speed')
 end
@@ -200,18 +198,18 @@ Behavior.resampled.no_run_time=noruntime;
 Behavior.speed=speed;
 
 Behavior.resampled.time=res_time;
-Behavior.resampled.cumulativeposition=res_cum_postion;
+Behavior.resampled.cumulativeposition=res_cum_position;
 Behavior.resampled.position=res_position;
 
 Events.Run.run_onset_offset=run_onset_offset;
 Events.Run.run_onset_binary=run_onset_binary;
 Events.Run.run_onset_ones=run_onset_ones;
 
-Events.No_Run.norun_onset_offset=norun_onset_offset;
-Events.No_Run.norun_onset_binary=norun_onset_binary;
-Events.No_Run.norun_onset_ones=norun_onset_ones;
+Events.NoRun.norun_onset_offset=norun_onset_offset;
+Events.NoRun.norun_onset_binary=norun_onset_binary;
+Events.NoRun.norun_onset_ones=norun_onset_ones;
 
-Events.option.runepochs=options;
+Events.options.run_epochs=options;
 
 if options.dispfig==true,
 c2plot=options.c2plot;    

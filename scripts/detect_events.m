@@ -3,19 +3,19 @@ function [Events]=detect_events(Imaging,options);
 
 %% Import 
 
-if Imaging.options.msbackadj== true && options.restricted==true
+if options.msbackadj== true && options.restricted==true
 C_df=Imaging.trace_restricted_baselinesub;  
 Cdf_time=Imaging.time_restricted;
 
-elseif Imaging.options.msbackadj== true && options.restricted==false
+elseif options.msbackadj== true && options.restricted==false
 C_df=Imaging.trace_baselinesub;
 Cdf_time=Imaging.time;
 
-elseif Imaging.options.msbackadj== false && options.restricted==true
+elseif options.msbackadj== false && options.restricted==true
 C_df=Imaging.trace_restricted;
 Cdf_time=Imaging.time_restricted;
 
-elseif Imaging.options.msbackadj== false && options.restricted==false
+elseif options.msbackadj== false && options.restricted==false
 C_df=Imaging.trace; 
 Cdf_time=Imaging.time;
 end
@@ -28,24 +28,10 @@ mindurevent=options.mindurevent;
 
 
 %% Detect events
-
-% Using 2, 3 and 4 std
-for sig=1:3;
- %positive events
-on_std{sig}=C_df>=(sig+1)*std(C_df);
-off_std{sig}=C_df<=SDOFF*std(C_df);
-
- %negative events
-on_neg_std{sig}=C_df<=-(sig+1)*std(C_df);
-off_neg_std{sig}=C_df>=-SDOFF*std(C_df);
-end
+on_ones=C_df>=SDON*std(C_df);
+off_ones=C_df<=SDOFF*std(C_df);
 
  %Find onset and offset, do multiple iterations
-
- %positive
-for sig=1:3
-on_ones=on_std{sig};
-off_ones=off_std{sig};
 for it=nb_it % nb of iteration 
 [on_off_ones, on_off_binary, on_off] = on_off_thr(on_ones, off_ones, C_df);
 %Change C_df for only trace between events
@@ -54,63 +40,18 @@ Cdf_off_idx{i}=find(on_off_ones(:,i)==0);
 Cdf_off{i}=C_df(Cdf_off_idx{i},i);
 std_Cdf_off(i)=std(Cdf_off{i});
 end
-on_ones=C_df>=(sig+1)*std_Cdf_off;
+on_ones=C_df>=SDON*std_Cdf_off;
 off_ones=C_df<=SDOFF*std_Cdf_off;
 end
-on_off_std{sig}=on_off_ones;
-on_off_binary_std{sig}=on_off_binary;
-on_off_sig{sig}=on_off;
-end
 
-
- %Negative
-for sig=1:3
-on_ones_neg=on_neg_std{sig};
-off_ones_neg=off_neg_std{sig};
-for it=nb_it % nb of iteration 
-[on_off_neg_ones, on_off_neg_binary, on_off_neg] = on_off_thr(on_ones_neg, off_ones_neg, C_df);
-%Change C_df for only trace between events
-for i=1:size(C_df,2)
-Cdf_off_neg_idx{i}=find(on_off_neg_ones(:,i)==0);
-Cdf_off_neg{i}=C_df(Cdf_off_neg_idx{i},i);
-std_Cdf_off_neg(i)=std(Cdf_off_neg{i});
-end
-on_ones_neg=C_df<=-(sig+1)*std_Cdf_off_neg;
-off_ones=C_df>=-SDOFF*std_Cdf_off_neg;
-end
-on_off_neg_std{sig}=on_off_neg_ones;
-on_off_binary_neg_std{sig}=on_off_neg_binary;
-on_off_neg_sig{sig}=on_off_neg;
-end
-
+ 
 %% Exclude events 
-
 %Find event duration : time end - time start
-% positives
-figure; 
-for sig=1:3
- on_off=on_off_sig{sig};   
+  
 for i=1:size(on_off,2)
     if isempty(on_off{i})==0
 eventduration{i}=Cdf_time(on_off{i}(:,2))-Cdf_time(on_off{i}(:,1));
 end 
-end
-hist_duration{sig}=cell2mat(eventduration');
-subplot(3,1,sig)
-histogram(hist_duration{sig})
-end
- % Negatives
-figure; 
-for sig=1:3
- on_off=on_off_neg_sig{sig};   
-for i=1:size(on_off,2)
-    if isempty(on_off{i})==0
-eventduration_neg{i}=Cdf_time(on_off{i}(:,2))-Cdf_time(on_off{i}(:,1));
-end 
-end
-hist_duration_neg{sig}=cell2mat(eventduration_neg');
-subplot(3,1,sig)
-histogram(hist_duration_neg{sig})
 end
 
 % exclude (nan) if events smaller than min duration set in parameter
@@ -133,8 +74,6 @@ for i=1:size(onset_offset,2)
 event_time{i}=[Cdf_time(onset_offset{i}(:,1)) Cdf_time(onset_offset{i}(:,2))];
 end 
 end
-
-
 
 %Make binary:
 binary=zeros(size(C_df,1),size(C_df,2));

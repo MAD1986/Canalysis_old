@@ -78,7 +78,7 @@ shuffle_dur_idx{i}=cell2mat(arrayfun(@(x) randperm((size(event_dur{i},2)),size(e
 end
 for S=1:Nshuffle
 binary_shuffle=binary(shuffle_onset_idx(S,:),:);
-for u=1:size(binary,2)
+for u=1:size(event_dur,2)
 duration_shuffle{S}{u}=event_dur{u}(shuffle_dur_idx{u}(S,:));
 onset_shuffle{S}{u}=find(binary_shuffle(:,u)==1);
 offset_shuffle{S}{u}=onset_shuffle{S}{u}+(duration_shuffle{S}{u})';

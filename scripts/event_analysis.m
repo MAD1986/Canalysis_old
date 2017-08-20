@@ -1,16 +1,11 @@
 
 function [Events, Network]=event_analysis(Behavior, Events, Imaging, options);
 
-%Events=Events{1};
-%Imaging=Imaging{1};
-%Behavior=Behavior{1};
-%Options
-
-
 %% Import data
 
 % standard deviation of noise
 options.STD_off=Events.STD_noise;
+options.restricted=Events.options.restricted;
 
 %Calcium trace
 if Imaging.options.msbackadj== true && options.restricted==true
@@ -36,13 +31,13 @@ time_all=Behavior.resampled.time;
 %Events
 onset_offset{1}=Events.onset_offset;
 onset_offset{2}=Events.Run.run_onset_offset;
-onset_offset{3}=Events.No_Run.norun_onset_offset;
+onset_offset{3}=Events.NoRun.norun_onset_offset;
 onset_binary{1}=Events.onset_binary; 
 onset_binary{2}=Events.Run.run_onset_binary;
-onset_binary{3}=Events.No_Run.norun_onset_binary;
+onset_binary{3}=Events.NoRun.norun_onset_binary;
 onset_ones{1}=Events.onset_ones; 
 onset_ones{2}=Events.Run.run_onset_ones;
-onset_ones{3}=Events.No_Run.norun_onset_ones;
+onset_ones{3}=Events.NoRun.norun_onset_ones;
 %% Measure Ca2+ events properties 
 for i=1:3   
 [Event_Properties{i}]=event_properties(C_df, onset_offset{i}, time{i}, options);
@@ -61,6 +56,7 @@ end
 
 %% Make structure
 Events.properties=Event_Properties{1};
+Events.options.properties=options;
 Events.Run.properties=Event_Properties{2};
 Events.NoRun.properties=Event_Properties{3};
 Network=Network_Properties{1};

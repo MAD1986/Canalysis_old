@@ -162,7 +162,7 @@ end
 %% Structure
 
 %remove nan
-for u=1:size(onset_offset,2); 
+for u=1:size(event_dur,2); 
 event_dur_nonan{u}=event_dur{u}(~isnan(event_dur{u}));
 MAX_PKS_nonan{u}=MAX_PKS{u}(~isnan(MAX_PKS{u}));
 event_amp_nonan{u}=event_amp{u}(~isnan(event_amp{u}));
