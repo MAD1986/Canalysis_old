@@ -2,9 +2,9 @@
 function [Network_Properties] = network_properties(Event_Properties,C_df,Cdf_time, options)
 
 %% Import data
-binary=Event_Properties.onset_binary;
-onset_ones=Event_Properties.onset_ones;
-onset_offset=Event_Properties.onset_offset; 
+binary=Event_Properties.onset_binary_analysed;
+onset_ones=Event_Properties.onset_ones_analysed;
+onset_offset=Event_Properties.onset_offset_analysed; 
  
 %% Frequency (event/min)
 nb_events=Event_Properties.nb_events; 
@@ -70,6 +70,9 @@ event_dur=Event_Properties.noNaN.duration;
 Nshuffle=options.Nshuffle;
 
 
+
+
+
 tic;
 disp(['Starting shuffle ', num2str(Nshuffle), 'X'])
 shuffle_onset_idx=cell2mat(arrayfun(@(x) randperm((size(binary,1)),size(binary,1)),(1:Nshuffle)','un',0));
@@ -78,10 +81,12 @@ shuffle_dur_idx{i}=cell2mat(arrayfun(@(x) randperm((size(event_dur{i},2)),size(e
 end
 for S=1:Nshuffle
 binary_shuffle=binary(shuffle_onset_idx(S,:),:);
+
 for u=1:size(event_dur,2)
 duration_shuffle{S}{u}=event_dur{u}(shuffle_dur_idx{u}(S,:));
 onset_shuffle{S}{u}=find(binary_shuffle(:,u)==1);
 offset_shuffle{S}{u}=onset_shuffle{S}{u}+(duration_shuffle{S}{u})';
+
 for uu=1:size(offset_shuffle{S}{u},1)
 if offset_shuffle{S}{u}(uu)>size(C_df,1)
      offset_shuffle{S}{u}(uu)=size(C_df,1);
@@ -113,16 +118,18 @@ fr_nb=1:size(C_df,1);
 sign_frames=fr_nb(sign_frames_idx);
     
 % nb of frames between each significant frames
-dist_sign_fr=diff(sign_frames);
-
-
-%Find synchronous epochs separated by more than 1 frames
+dist_sign_fr=diff(sign_frames)';
+%Find consecutive synchronous epochs separated by more than 1 frames
 % find non consecutive events : if differences (diff) > 1
 epochs_end_idx=find(dist_sign_fr>1);
 % end of epoch when separated by more than 1 frame 
-epochs_end_idx=epochs_end_idx';
+epochs_end_fr=sign_frames(epochs_end_idx);
 % Make start stop
-epochs_start_idx=[dist_sign_fr(1);epochs_end_idx+1];
+if epochs_end_idx(end)<=length(sign_frames)
+epochs_start_idx=[sign_frames(1);epochs_end_idx+1];
+elseif epochs_end_idx(end)>=length(sign_frames)
+epochs_start_idx=[sign_frames(1);epochs_end_idx];
+end
 epochs_end_idx=[epochs_end_idx ;length(sign_frames)];
 syn_epochs=[epochs_start_idx epochs_end_idx];
 syn_epochs_frames=sign_frames(syn_epochs);

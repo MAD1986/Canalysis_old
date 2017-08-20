@@ -114,10 +114,11 @@ hist_events{sig}=[hist_duration_neg{sig}; hist_duration{sig}];
 ax{sig}=subplot(size(SD,2),1,sig);
 max_X(sig)=max(hist_events{sig});
 min_X(sig)=min(hist_events{sig});
-histogram(hist_events{sig})
+histogram(hist_duration{sig})
+hold on;
+histogram(hist_duration_neg{sig})
 %axis([ax{sig}],[min(min_X) max(max_X) 0 inf])
-axis([ax{sig}],[-5 5 0 inf])
-
+%axis([ax{sig}],[-5 5 0 inf])
 title(['Cumulative distribution of events >=' num2str(SD(sig)) ' standard deviation'])
 xlabel('Transient duration >= (s)'); 
 ylabel('Number of events');
