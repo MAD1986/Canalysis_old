@@ -121,21 +121,39 @@ clear options
 % Events parameters
 options.exclude=1; % Remove events when no peaks found 
 options.mindist= 10; % Set minimun distance between peaks (frame)
-options.STD_pro=2.5; % Set minimun prominence of peak ( X * STD noise)
+options.STD_pro=1.5; % Set minimun prominence of peak ( X * STD noise)
 % Network parameters
 % synchronous epochs based on Rajasethupathy et al. 2015
 options.Nshuffle=100; % Nb of shuffle for synchronous activity 
 options.pmin=0.05; % min p value to be considered as significant
 options.minframes=3; %consecutive frames with activity above the significance threshold
+
 %Function
-for i=1:3
+for i=1:sessions
 [Events{i}, Network{i}, Figure{i}]=event_analysis(Behavior{i}, Events{i}, Imaging{i}, options);
 end 
 clear options
 %% Identification of spatially-tuned cells
+% Set parameters
+options.sigma_filter=3;
+options.smooth_span=3; % span for moving average filter on dF/F
+options.minevents=3; % 
+options.Nbin=[2;4;5;8;10;20;25;100]; % Number of bins to test ([2;4;5;8;10;20;25;100] Danielson et al. 2016)
+options.bin_spatial_tuning=100; % Number of bins to compute spatial tuning curve (rate map) -value should be in options.Nbin
+options.Nshuffle=1000; 
+options.pvalue=0.05;
+options.dispfig=1; % Display figure 
+ 
+%Function
+tic;
+for i=1:sessions
+[Place_cell{i}]=spatial_info(Behavior{i}, Events{i}, Imaging{i},options);
+[Place_cell{i}]=tuning_specificity(Place_cell{i},Behavior{i},Events{i},options);
+[Place_cell{i}]=shuffle_place_cell(Place_cell{i},Behavior{i},Events{i},options);
 
-
-
+end
+toc;
+%% 
 
 for j=1:sessions
 tic;
@@ -145,7 +163,7 @@ Behavior{j}.placeoptions.minevents=3; %Minimun nb of events - excluded =NaN
 %Iteration for nb of bins = 2,4,5,8,10,20,25,100
 Nbin=[2;4;5;8;10;20;25;100];
 %Iteration for nb shuffle 
-Nshuffle=10000; 
+Nshuffle=1000; 
 %P value min
 pvalue=0.05;
 for it=1:length(Nbin) %nb of iteration

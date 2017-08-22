@@ -1,42 +1,70 @@
 
-function [Spatialinfo]=shuffle_spatial_info(Spatialinfo,Nbin,Nshuffle);
+function [Place_cell]=shuffle_spatial_info(Place_cell,options);
 
-occupancy_map_smooth=Spatialinfo.occupancy_map.occupancy_map_smoothed;
-onset_map=Spatialinfo.event_map.event_map;
-overall_rate=Spatialinfo.overall_rate;
-proba_bin=Spatialinfo.proba_per_bin; 
+onset_map=Place_cell.Spatial_Info.event_map;
+overall_rate=Place_cell.Spatial_Info.overall_rate;
+proba_bin=Place_cell.Spatial_Info.proba_bin; 
+run_onset_binary=Place_cell.Spatial_Info.Run_onset_bin;
+occupancy=Place_cell.Spatial_Info.occupancy_map;
+bin=Place_cell.Bin;
+Nshuffle=options.Nshuffle;
+Nbin=options.Nbin;
+
+%% Shuffle binary map
+tic
+binary_shuffle_idx=cell2mat(arrayfun(@(x) randperm((size(run_onset_binary,1)),size(run_onset_binary,1)),(1:Nshuffle)','un',0));
+disp(['Starting shuffle ', num2str(Nshuffle), 'X'])
+for S=1:Nshuffle
+binary_shuffle=run_onset_binary(binary_shuffle_idx(S,:),:);
+for i=1:length(Nbin)
+for n=1:size(run_onset_binary,2)
+onset_bin_shuffle{i}{n}=bin{i}(binary_shuffle(:,n)==1);
+for binN=1:options.Nbin(i)
+onset_map_shuffle{S}{i}(binN,n)=numel(find(onset_bin_shuffle{i}{n}==binN));
+end
+end
+end
+end
+disp(['End shuffle '])
+toc;
 
 
-%% Shuffle onset_map
-idx=cell2mat(arrayfun(@(x) randperm((Nbin),size(onset_map,1)),(1:Nshuffle)','un',0));
-for u=1:size(onset_map,2)
-    for uu=1:Nshuffle
-onset_shuffle{uu}(:,u)=onset_map((idx(uu,:)),u);
-    end;end
+%% Shuffle onset_map OLD
+%idx=cell2mat(arrayfun(@(x) randperm((Nbin),size(onset_map,1)),(1:Nshuffle)','un',0));
+%for u=1:size(onset_map,2)
+%    for uu=1:Nshuffle
+%onset_shuffle{uu}(:,u)=onset_map((idx(uu,:)),u);
+%    end;end
 
 %% Rate maps : total number of onset that occurred in a location
-%bin divided by the time the animal spent in that bin
-for uu=1:Nshuffle
-for u=1:size(onset_map,2)
-%smooth rate map
-onset_shuffle_smooth(:,u)=Smooth(onset_shuffle{uu}(:,u),Spatialinfo.options.smooth);
-rate_map_shuffle{uu}=onset_shuffle_smooth./occupancy_map_smooth;
-end;end
+for S=1:Nshuffle
+for i=1:length(options.Nbin)
+for n=1:size(run_onset_binary,2)
+onset_map_shuffle_sm{i}(:,n)=imgaussfilt(onset_map_shuffle{S}{i}(:,n),options.sigma_filter);
+end
+rate_map_shuffle_sm{S}{i}=onset_map_shuffle_sm{i}./occupancy{i}';
+end
+end
+
 
 %% Spatial specificity (Danielson et al. 2016);
-%?i * ln * (?i/?) * pi 
-%Sum for number of bins = 2,4,5,8,10,20,25,100
 
-%?i is the mean onset rate of a cell in the i-th bin, 
-%? is the overall mean onset rate, 
-%pi is the probability of the animal being in the i-th bin
-for uu=1:Nshuffle
-rate_ratio_shuffle=rate_map_shuffle{uu}./overall_rate;
-spatial_info_shuffle_array{uu}=nansum(rate_map_shuffle{uu}.*log(rate_ratio_shuffle).*proba_bin);
+
+
+for S=1:Nshuffle
+for i=1:length(options.Nbin)
+    %(Danielson et al. 2016)
+rate_ratio_shuffle{S}{i}=(rate_map_shuffle_sm{S}{i}./mean(rate_map_shuffle_sm{S}{i}));
+spatial_info_bin_shuffle{S}{i}=rate_map_shuffle_sm{S}{i}.*log(rate_ratio_shuffle{S}{i}).*proba_bin{i}';
+SI_shuffle{S}(i,:)=nansum(spatial_info_bin_shuffle{S}{i});
+%(Skaggs)
+spatial_info_bin_S_shuffle{S}{i}=rate_ratio_shuffle{S}{i}.*log2(rate_ratio_shuffle{S}{i}).*proba_bin{i}';
+SIS_shuffle{S}(i,:)=nansum(spatial_info_bin_S_shuffle{S}{i});
 end
-spatial_info_shuffle=(reshape((cell2mat(spatial_info_shuffle_array)),size(onset_map,2),[]))';
-spatial_info_shuffle(~spatial_info_shuffle)=nan;
-Spatialinfo.shuffle.spatial_info= spatial_info_shuffle;
+end
+
+Place_cell.Spatial_Info.Shuffle.spatial_info=SI_shuffle;
+Place_cell.Spatial_Info.Shuffle.spatial_info_Skaggs=SIS_shuffle;
 
 end
 

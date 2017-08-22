@@ -48,8 +48,9 @@ for i=1:3
 end
 %% Distribution histogram and PCA
 for i=1:1
-[hist_events]= histo_events(Event_Properties{i});
+[hist_events]= histo_events(Event_Properties{i},options);
 end
+
 %% PCA 
 %for i=1:3
 %[PCA_Properties{i}]= PCA_analysis(Event_Properties{i} ,Network_Properties{i});

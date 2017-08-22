@@ -23,7 +23,6 @@ AUC_rate=meanAUC/rec_dur;
 %% Correlation between cell
 % See Rajasethupathy et al. 2015
 % https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4825678
-
 %Do Pearson correlation removing inter events period (dF/F during inter
 %event periods = 0)
 %To avoid accumulation in correlated signal due to slow drifts 
@@ -31,8 +30,6 @@ AUC_rate=meanAUC/rec_dur;
 C_df_sub=C_df;
 C_df_sub(onset_ones==0)=0;
 [dfCCorr_sub, dfCCorrPvalues_sub] = corrcoef(C_df_sub);
-
-
 %finding the number of correlated neurons 
 %with which the Pearsons correlation coefficient
 %is above 0.3.
@@ -42,20 +39,14 @@ C_df_sub(onset_ones==0)=0;
  corr_pairs{i}= corr_pairs{i}(corr_pairs{i}~=i);
   nb_corr_pairs(i)=length(corr_pairs{i});
   end
-  
  %HC neurons were defined as those neurons that had more 
  %correlated partners than 
  %that of the average neuron in the same volume 
  %by >1 standard deviation
  HC_neurons= find(nb_corr_pairs>std(nb_corr_pairs));
- 
 %activity histograms :
 %percentage of active cells as a function of time.
-
-
 %% Synchronous activity 
-
-
 %  To identify epochs of synchronous activity that included more active cells 
 % than would be expected by chance at each frame, 
 % reshuffling performed 1,000 times, 
@@ -68,12 +59,6 @@ activity_hist=(sum(onset_ones,2)/size(onset_ones,2))*100;
 % import duration for offset
 event_dur=Event_Properties.noNaN.duration;
 Nshuffle=options.Nshuffle;
-
-
-
-
-
-tic;
 disp(['Starting shuffle ', num2str(Nshuffle), 'X'])
 shuffle_onset_idx=cell2mat(arrayfun(@(x) randperm((size(binary,1)),size(binary,1)),(1:Nshuffle)','un',0));
 for i=1:size(event_dur,2)
@@ -108,7 +93,7 @@ S_activity_hist(S,:)=(sum(Temp_onset_ones,2)/size(Temp_onset_ones,2))*100;
 end
 
 disp('End shuffle')
- toc; 
+ 
 
 %p-value was defined as the fraction of shuffle distribution that 
 %exceeded the frame true number of co-active cells
@@ -148,11 +133,7 @@ end
 end
 syn_epochs_frames= syn_epochs_frames(~isnan( syn_epochs_frames(:,2)),:);
 syn_epochs=syn_epochs(~isnan(syn_epochs(:,2)),:);
-
-
-
 nb_syn_epochs=size(syn_epochs,1);
-
 %Number of co-active neurons in significant frames
 nb_CC_sig_fr=activity_hist(sign_frames_idx);
 co_act_fr=[sign_frames' nb_CC_sig_fr];

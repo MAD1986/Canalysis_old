@@ -41,7 +41,9 @@ PKS=df_properties.PKS;
 nb_event_tot=df_properties.nb_event_tot;
 
 
-%% Remove onset offset / binary / ones of non analyzed events
+%% Remove onset offset / binary / ones of non analyzed events :
+if options.exclude==true
+
 for u=1:size(onset_offset,2)
 for uu=1:size(onset_offset{u},1)   
 if isempty(PKS{u}{uu})==1
@@ -63,6 +65,9 @@ event_width_exc=df_properties_exc.event_width;
 MAX_PKS_exc=df_properties_exc.MAX_PKS;
 PKS_exc=df_properties_exc.PKS;
 
+Event_Properties.excluded_trace=excluded_df_on_off;
+
+end
 
 % Remove onset offset values for excluded events
 onset_offset_exc=onset_offset;
@@ -96,15 +101,20 @@ end
 nb_event_tot=sum(nb_event);
 nb_event_ana_tot=sum(nb_event_ana);
 nb_excluded_events=nb_event_tot-nb_event_ana_tot;
+if options.exclude==true
 disp(['Number of excluded events = ' num2str(nb_excluded_events), ' / ' , num2str(nb_event_ana_tot)])
-
+end
+if options.exclude==false
+disp(['Number of analyzed events = ' num2str(nb_event_ana_tot)])
+end
 
 Event_Properties.nb_events=nb_event_ana;
 Event_Properties.nb_excluded_events=nb_excluded_events;
-Event_Properties.excluded_trace=excluded_df_on_off;
+
 Event_Properties.onset_offset_analysed=onset_offset_nonan;
 Event_Properties.onset_binary_analysed=binary_exc;
 Event_Properties.onset_ones_analysed=ones_exc;
+
 
 %% Structure
 %remove nan
@@ -126,8 +136,9 @@ Event_Properties.mean=event_mean;
 Event_Properties.AUC=event_AUC;
 Event_Properties.width=event_width;
 
+if options.exclude==true
 Event_Properties.Excluded=df_properties_exc;
-
+end
 
 Event_Properties.noNaN.duration=event_dur_nonan;
 Event_Properties.noNaN.peak=MAX_PKS_nonan;
