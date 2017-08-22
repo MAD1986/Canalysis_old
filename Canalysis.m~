@@ -140,16 +140,53 @@ options.smooth_span=3; % span for moving average filter on dF/F
 options.minevents=3; % 
 options.Nbin=[2;4;5;8;10;20;25;100]; % Number of bins to test ([2;4;5;8;10;20;25;100] Danielson et al. 2016)
 options.bin_spatial_tuning=100; % Number of bins to compute spatial tuning curve (rate map) -value should be in options.Nbin
-options.Nshuffle=10000; 
+options.Nshuffle=100; 
 options.pvalue=0.05;
 options.dispfig=1; % Display figure 
  
 %Function
+tic;
 for i=1:sessions
 [Place_cell{i}]=spatial_info(Behavior{i}, Events{i}, Imaging{i},options);
 [Place_cell{i}]=tuning_specificity(Place_cell{i},Behavior{i},Events{i},options);
 [Place_cell{i}]=shuffle_place_cell(Place_cell{i},Behavior{i},Events{i},options);
 end
+toc;
+%% 
+
+for j=1:sessions
+tic;
+Behavior{j}.placeoptions.smooth=3; %sigma value of filter
+Behavior{j}.placeoptions.minevents=3; %Minimun nb of events - excluded =NaN
+% Spatial information
+%Iteration for nb of bins = 2,4,5,8,10,20,25,100
+Nbin=[2;4;5;8;10;20;25;100];
+%Iteration for nb shuffle 
+Nshuffle=1000; 
+%P value min
+pvalue=0.05;
+for it=1:length(Nbin) %nb of iteration
+
+[Spatialinfo{j}{it}]=spatial_info_V2(Behavior{j}, Events{j}, Imaging{j},Nbin(it));
+[Spatialinfo{j}{it}]=shuffle_spatial_info(Spatialinfo{j}{it},Nbin(it),Nshuffle);
+
+end
+toc;
+end
+
+for j=1:sessions
+tic;
+[SpatiallyTunedCells{j}]=spatial_tuning_pvalue_V2(Spatialinfo{j},Nbin,Nshuffle,pvalue);
+%Tuning Specificity 
+clear i;
+[TuningSpecificity{j}]=tuning_specificity_V4(Behavior{j},Events{j});
+[TuningSpecificity{j},SpatiallyTunedCells{j}]=shuffle_tuning_specificity_V3(TuningSpecificity{j},Behavior{j},Events{j},SpatiallyTunedCells{j}, Nshuffle,pvalue);
+%Tuned cells - and plot
+%cells with significant spatial information and tuning specificity
+[SpatiallyTunedCells{j}]=tuned_cells(SpatiallyTunedCells{j},Spatialinfo{j},TuningSpecificity{j});
+toc;
+end
+
 
 %% Textures
 for i=1:sessions
