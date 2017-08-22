@@ -1,7 +1,4 @@
 %%  MAD Ca2+ analysis
-%
-% !toolboxes needed!  
-% Bioinformatics Toolbox 
 
 %% Import data (XML, MAT, CSV)
 directory_name = '/Users/martial/Documents/Results/CA3_ThyGC6f/M1/FOV4' %folder with .mat .csv and .xml
@@ -140,7 +137,7 @@ options.smooth_span=3; % span for moving average filter on dF/F
 options.minevents=3; % 
 options.Nbin=[2;4;5;8;10;20;25;100]; % Number of bins to test ([2;4;5;8;10;20;25;100] Danielson et al. 2016)
 options.bin_spatial_tuning=100; % Number of bins to compute spatial tuning curve (rate map) -value should be in options.Nbin
-options.Nshuffle=10000; 
+options.Nshuffle=1000; 
 options.pvalue=0.05;
 options.dispfig=1; % Display figure 
  
